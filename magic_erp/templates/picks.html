@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}領料{% endblock %}
+{% block content %}
+<h1>課堂領料（教室取物）</h1>
+<div class="card no-print">
+  <form class="form-row">
+    <label>課堂日期起<input type="date" name="from" value="{{ date_from }}"></label>
+    <label>迄<input type="date" name="to" value="{{ date_to }}"></label>
+    <button class="secondary">查詢</button>
+  </form>
+  <p class="hint">領料單由「課程用料 × 班級人數」自動產生，不需手動計算。已發料未結案的單據會一直顯示，直到課後歸還結案。</p>
+</div>
+<div class="card">
+  <table>
+    <tr><th>日期</th><th>教室</th><th>班級</th><th>堂次</th><th class="n">人數</th><th>課堂狀態</th><th>領料單</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.date }}</td><td>{{ r.classroom }}</td><td>{{ r.class_name }}</td><td>第 {{ r.seq }} 堂 {{ r.title }}</td><td class="n">{{ r.student_count }}</td>
+      <td><span class="tag {{ r.status }}">{{ SESSION_STATUS[r.status] }}</span></td>
+      <td>{% if r.pick_id %}<a href="{{ url_for('main.pick_detail', pid=r.pick_id) }}"><span class="tag {{ r.pick_status }}">{{ PICK_STATUS[r.pick_status] }}</span> #{{ r.pick_id }}</a>
+          {% elif can('office', 'warehouse') %}<form class="inline" method="post" action="{{ url_for('main.pick_create', sid=r.id) }}"><button class="small">產生領料單</button></form>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="7" class="muted">期間內無課堂</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

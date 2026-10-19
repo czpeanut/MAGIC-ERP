@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}盤點單 #{{ st.id }}{% endblock %}
+{% block content %}
+<h1>盤點單 #{{ st.id }}　{{ st.date }} <span class="tag {{ st.status }}">{{ '已過帳' if st.status == 'posted' else '盤點中' }}</span></h1>
+{% set editable = st.status == 'draft' and can('warehouse') %}
+<form method="post">
+<div class="card">
+  <p class="hint no-print">依儲位排序，可列印後到倉庫清點。空白＝未盤（過帳時不調整）。 <a href="javascript:print()">列印</a></p>
+  <table>
+    <tr><th>儲位</th><th>料號</th><th>品名</th><th>規格</th><th class="n">帳面</th><th class="n">實盤</th><th class="n">差異</th></tr>
+    {% for l in lines %}
+    {% set diff = (l.counted_qty - l.system_qty) if l.counted_qty is not none else none %}
+    <tr><td>{{ l.location }}</td><td>{{ l.code }}</td><td>{{ l.name }}</td><td>{{ l.spec }}</td>
+      <td class="n">{{ l.system_qty|fmt }} {{ l.unit }}</td>
+      <td class="n">{% if editable %}<input type="number" step="any" name="count_{{ l.id }}" value="{{ l.counted_qty|fmt }}">{% else %}{{ l.counted_qty|fmt }}{% endif %}</td>
+      <td class="n {{ 'bad' if diff }}">{{ diff|fmt if diff is not none }}</td></tr>
+    {% endfor %}
+  </table>
+  {% if editable %}
+  <p class="no-print"><button name="action" value="save" class="secondary">暫存</button>
+     <button name="action" value="post" onclick="return confirm('過帳後差異會寫入庫存，確定？')">過帳</button></p>
+  {% endif %}
+</div>
+</form>
+{% endblock %}

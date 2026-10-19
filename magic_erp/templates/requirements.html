@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}需求分析{% endblock %}
+{% block content %}
+<h1>需求分析（預算 − 庫存 → 採購 / 加工建議）</h1>
+<div class="card no-print">
+  <form class="form-row">
+    <label>課堂日期起<input type="date" name="from" value="{{ date_from }}"></label>
+    <label>迄<input type="date" name="to" value="{{ date_to }}"></label>
+    <button class="secondary">計算</button>
+    <a class="btn secondary" href="{{ url_for('main.requirements', **{'from': date_from, 'to': date_to, 'format': 'csv'}) }}">匯出 CSV</a>
+  </form>
+  <p class="hint">課堂需求：期間內「已排定、未領料」的課堂，依各堂用料 × 班級人數自動計算。耗材加總；非耗材取單日最高用量（課後歸還）。
+    可用量＝現有庫存＋領出未還（非耗材）＋加工中預計產出 − 待加工單保留的原料。
+    建議數量＝需求＋安全存量 − 可用量；需加工品的缺口會換算成原料需求（加工衍生需求）。</p>
+</div>
+<div class="card">
+  <table>
+    <tr><th>料號</th><th>品名</th><th>類別</th><th class="n">課堂需求</th><th class="n">加工衍生</th><th class="n">現有庫存</th>
+      <th class="n">領出未還</th><th class="n">加工中</th><th class="n">已保留</th><th class="n">安全存量</th><th class="n">建議數量</th><th>建議動作</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.material.code }}</td><td>{{ r.material.name }} <span class="muted">{{ r.material.spec }}</span></td>
+      <td><span class="tag {{ r.material.kind }}">{{ KIND_LABELS[r.material.kind] }}</span></td>
+      <td class="n">{{ r.demand|fmt }}</td><td class="n">{{ r.derived|fmt }}</td><td class="n">{{ r.on_hand|fmt }}</td>
+      <td class="n">{{ r.outstanding|fmt }}</td><td class="n">{{ r.incoming|fmt }}</td><td class="n">{{ r.reserved|fmt }}</td>
+      <td class="n">{{ r.safety|fmt }}</td>
+      <td class="n {{ 'bad' if r.shortage }}">{{ r.shortage|fmt }} {{ r.material.unit }}</td>
+      <td>{% if r.action == '開加工單' and can('warehouse') %}<a class="btn small" href="{{ url_for('main.process', material_id=r.material.id, qty=r.shortage) }}">開加工單</a>
+          {% elif r.action %}<span class="tag bad">{{ r.action }}</span>{% else %}<span class="tag ok">足夠</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="12" class="muted">期間內無需求</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

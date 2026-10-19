@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.name }}{% endblock %}
+{% block content %}
+<h1>{{ course.code }} {{ course.name }}</h1>
+<p class="hint">{{ course.description }}　用量計算基準：每人 × 學生數、每組 × ⌈學生數 ÷ 每組人數⌉、每班 × 1，再加損耗率後無條件進位。</p>
+
+{% for l in lessons %}
+<div class="card">
+  <h2>第 {{ l.seq }} 堂：{{ l.title }}</h2>
+  <table>
+    <tr><th>料號</th><th>品名</th><th>規格</th><th>類別</th><th class="n">用量</th><th>基準</th><th class="n">損耗%</th><th></th></tr>
+    {% for line in by_lesson[l.id] %}
+    <tr><td>{{ line.code }}</td><td>{{ line.name }}{% if line.source_material_id %} <span class="tag">需加工</span>{% endif %}</td><td>{{ line.spec }}</td>
+      <td><span class="tag {{ line.kind }}">{{ KIND_LABELS[line.kind] }}</span></td>
+      <td class="n">{{ line.qty|fmt }} {{ line.unit }}</td><td>{{ BASIS_LABELS[line.basis] }}</td><td class="n">{{ line.waste_pct|fmt }}</td>
+      <td>{% if can('designer') %}<form class="inline" method="post" action="{{ url_for('main.lesson_line_delete', cid=course.id, line_id=line.id) }}"><button class="danger small">刪除</button></form>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="8" class="muted">尚未設定用料</td></tr>{% endfor %}
+  </table>
+  {% if can('designer') %}
+  <form method="post" action="{{ url_for('main.lesson_line_save', cid=course.id) }}" class="form-row no-print" style="margin-top:8px">
+    <input type="hidden" name="lesson_id" value="{{ l.id }}">
+    <label>物料<select name="material_id">{% for m in materials %}<option value="{{ m.id }}">{{ m.code }} {{ m.name }} {{ m.spec }}</option>{% endfor %}</select></label>
+    <label>用量<input type="number" step="any" name="qty" required></label>
+    <label>基準<select name="basis">{% for k, v in BASIS_LABELS.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+    <label>損耗%<input type="number" step="any" name="waste_pct" value="0"></label>
+    <button class="secondary">加入 / 更新</button>
+  </form>
+  <form method="post" action="{{ url_for('main.lesson_save', cid=course.id) }}" class="form-row no-print" style="margin-top:8px">
+    <input type="hidden" name="lesson_id" value="{{ l.id }}">
+    <label>堂次名稱<input name="title" value="{{ l.title }}" size="30"></label><button class="secondary small">改名</button>
+  </form>
+  {% endif %}
+</div>
+{% endfor %}
+{% if can('designer') %}
+<form method="post" action="{{ url_for('main.lesson_save', cid=course.id) }}" class="form-row card no-print">
+  <label>新增堂次<input name="title" placeholder="堂次名稱" size="30"></label><button>新增</button>
+</form>
+{% endif %}
+
+<div class="card">
+  <h2>整門課材料預算試算</h2>
+  <form class="form-row no-print">
+    <label>學生數<input type="number" name="students" value="{{ students }}"></label>
+    <label>每組人數<input type="number" name="group_size" value="{{ group_size }}"></label>
+    <button class="secondary">試算</button>
+  </form>
+  <p class="hint">耗材：各堂加總；非耗材：課後歸還可重複使用，取單堂最大用量。</p>
+  <table>
+    <tr><th>類別</th><th>料號</th><th>品名</th><th>規格</th><th class="n">需求數量</th></tr>
+    {% for b in budget %}
+    <tr><td><span class="tag {{ b.line.kind }}">{{ KIND_LABELS[b.line.kind] }}</span></td><td>{{ b.line.code }}</td><td>{{ b.line.name }}</td><td>{{ b.line.spec }}</td><td class="n">{{ b.total|fmt }} {{ b.line.unit }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

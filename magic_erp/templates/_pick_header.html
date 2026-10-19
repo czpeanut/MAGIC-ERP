@@ -1,0 +1,5 @@
+<table>
+  <tr><th>課程</th><td>{{ pick.course }}</td><th>班級</th><td>{{ pick.class_name }}（{{ pick.student_count }} 人，每組 {{ pick.group_size }} 人）</td></tr>
+  <tr><th>堂次</th><td>第 {{ pick.seq }} 堂 {{ pick.title }}</td><th>日期 / 教室</th><td>{{ pick.date }} · {{ pick.classroom }}</td></tr>
+  <tr><th>狀態</th><td><span class="tag {{ pick.status }}">{{ PICK_STATUS[pick.status] }}</span></td><th>發料</th><td>{{ pick.issuer or '' }} {{ pick.issued_at or '' }}</td></tr>
+</table>

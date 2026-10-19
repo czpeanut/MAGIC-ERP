@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}庫存{% endblock %}
+{% block content %}
+<h1>庫存</h1>
+<p class="hint">庫存數量＝所有異動加總，由系統自動計算（取代人工「庫存結餘表」）。</p>
+{% if can('warehouse') %}
+<div class="card">
+  <h2>入庫 / 報廢</h2>
+  <form method="post" class="form-row">
+    <label>類型<select name="type"><option value="purchase">採購入庫</option><option value="scrap">報廢</option></select></label>
+    <label>物料<select name="material_id">{% for m in materials %}<option value="{{ m.id }}">{{ m.code }} {{ m.name }} {{ m.spec }}</option>{% endfor %}</select></label>
+    <label>數量<input type="number" step="any" name="qty" required></label>
+    <label>備註<input name="note" size="30" placeholder="廠商 / 單號 / 原因"></label>
+    <button>登錄</button>
+  </form>
+</div>
+{% endif %}
+<div class="grid">
+<div class="card">
+  <h2>現有庫存</h2>
+  <table>
+    <tr><th>料號</th><th>品名</th><th>類別</th><th>儲位</th><th class="n">庫存</th></tr>
+    {% for m in materials %}
+    <tr><td><a href="{{ url_for('main.material_edit', mid=m.id) }}">{{ m.code }}</a></td><td>{{ m.name }} <span class="muted">{{ m.spec }}</span></td>
+      <td><span class="tag {{ m.kind }}">{{ KIND_LABELS[m.kind] }}</span></td><td>{{ m.location }}</td>
+      <td class="n {{ 'bad' if on_hand[m.id] < m.safety_stock }}">{{ on_hand[m.id]|fmt }} {{ m.unit }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="card">
+  <h2>最近 100 筆異動</h2>
+  <table>
+    <tr><th>時間</th><th>物料</th><th>類型</th><th class="n">數量</th><th>備註</th><th>人員</th></tr>
+    {% for mv in moves %}
+    <tr><td class="muted">{{ mv.created_at }}</td><td>{{ mv.code }} {{ mv.name }}</td><td>{{ MOVE_LABELS.get(mv.type, mv.type) }}</td>
+      <td class="n {{ 'bad' if mv.qty < 0 }}">{{ mv.qty|fmt }}</td><td>{{ mv.note }}</td><td>{{ mv.display_name or '' }}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>領料單 #{{ pick.id }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
+<body onload="print()"><main>
+<h1>領料單 #{{ pick.id }}</h1>
+{% include '_pick_header.html' %}
+<br>
+<table>
+  <tr><th>儲位</th><th>料號</th><th>品名</th><th>規格</th><th>類別</th><th class="n">數量</th><th>取物 ✓</th><th>歸還 ✓</th></tr>
+  {% for l in lines %}
+  <tr><td>{{ l.location }}</td><td>{{ l.code }}</td><td>{{ l.name }}</td><td>{{ l.spec }}</td><td>{{ KIND_LABELS[l.kind] }}</td>
+    <td class="n">{{ (l.issued_qty if l.issued_qty is not none else l.planned_qty)|fmt }} {{ l.unit }}</td><td>☐</td><td>{{ '☐' if l.kind == 'reusable' else '—' }}</td></tr>
+  {% endfor %}
+</table>
+<p style="margin-top:40px">發料人：＿＿＿＿＿＿　領料人：＿＿＿＿＿＿　歸還確認：＿＿＿＿＿＿</p>
+</main></body></html>

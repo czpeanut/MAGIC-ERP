@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ m.name }}{% endblock %}
+{% block content %}
+<h1>{{ m.code }} {{ m.name }} <span class="tag {{ m.kind }}">{{ KIND_LABELS[m.kind] }}</span> 庫存 {{ on_hand|fmt }} {{ m.unit }}</h1>
+{% if can('designer', 'warehouse') %}
+<div class="card">
+  <form method="post">{% include '_material_form.html' %}<p><button>儲存</button></p></form>
+</div>
+{% endif %}
+<div class="grid">
+<div class="card">
+  <h2>使用於課程</h2>
+  <table><tr><th>課程</th><th>堂次</th><th class="n">用量</th></tr>
+  {% for u in used_in %}<tr><td><a href="{{ url_for('main.course_detail', cid=u.course_id) }}">{{ u.course }}</a></td><td>{{ u.seq }}. {{ u.title }}</td><td class="n">{{ u.qty|fmt }} / {{ BASIS_LABELS[u.basis] }}</td></tr>
+  {% else %}<tr><td colspan="3" class="muted">無</td></tr>{% endfor %}</table>
+</div>
+<div class="card">
+  <h2>最近異動</h2>
+  <table><tr><th>時間</th><th>類型</th><th class="n">數量</th><th>備註</th><th>人員</th></tr>
+  {% for mv in moves %}<tr><td>{{ mv.created_at }}</td><td>{{ MOVE_LABELS.get(mv.type, mv.type) }}</td><td class="n">{{ mv.qty|fmt }}</td><td>{{ mv.note }}</td><td>{{ mv.display_name or '' }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">無</td></tr>{% endfor %}</table>
+</div>
+</div>
+{% endblock %}

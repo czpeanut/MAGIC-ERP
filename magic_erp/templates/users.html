@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}帳號{% endblock %}
+{% block content %}
+<h1>帳號管理</h1>
+<div class="card">
+  <form method="post" class="form-row">
+    <label>帳號<input name="username" required></label>
+    <label>顯示名稱<input name="display_name"></label>
+    <label>角色<select name="role">{% for k, v in ROLE_LABELS.items() %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></label>
+    <label>密碼<input type="password" name="password" required></label>
+    <button>建立</button>
+  </form>
+</div>
+<div class="card">
+  <table><tr><th>帳號</th><th>名稱</th><th>角色</th></tr>
+  {% for u in rows %}<tr><td>{{ u.username }}</td><td>{{ u.display_name }}</td><td>{{ ROLE_LABELS[u.role] }}</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}領料單 #{{ pick.id }}{% endblock %}
+{% block content %}
+<h1>領料單 #{{ pick.id }} <a class="btn secondary small" href="{{ url_for('main.pick_print', pid=pick.id) }}" target="_blank">列印</a></h1>
+<div class="card">{% include '_pick_header.html' %}</div>
+<div class="card">
+{% if pick.status == 'draft' %}
+  <form method="post" action="{{ url_for('main.pick_issue', pid=pick.id) }}">
+  <table>
+    <tr><th>儲位</th><th>料號</th><th>品名</th><th>類別</th><th class="n">計畫數量</th><th class="n">倉庫庫存</th><th class="n">實發數量</th></tr>
+    {% for l in lines %}
+    <tr><td>{{ l.location }}</td><td>{{ l.code }}</td><td>{{ l.name }} <span class="muted">{{ l.spec }}</span></td><td><span class="tag {{ l.kind }}">{{ KIND_LABELS[l.kind] }}</span></td>
+      <td class="n">{{ l.planned_qty|fmt }} {{ l.unit }}</td><td class="n {{ 'bad' if on_hand[l.material_id] < l.planned_qty }}">{{ on_hand[l.material_id]|fmt }}</td>
+      <td class="n"><input type="number" step="any" name="issued_{{ l.material_id }}" value="{{ l.planned_qty|fmt }}" {{ 'disabled' if not can('office', 'warehouse') }}></td></tr>
+    {% endfor %}
+  </table>
+  {% if can('office', 'warehouse') %}<p><button>確認發料（扣庫存）</button>
+    <button class="secondary" formaction="{{ url_for('main.pick_regenerate', pid=pick.id) }}">依最新人數重新計算</button></p>{% endif %}
+  </form>
+{% elif pick.status == 'issued' %}
+  <form method="post" action="{{ url_for('main.pick_close', pid=pick.id) }}">
+  <p class="hint">課後結案：非耗材預設全數歸還，耗材請填剩餘可回收數量（預設 0）。</p>
+  <table>
+    <tr><th>料號</th><th>品名</th><th>類別</th><th class="n">實發</th><th class="n">歸還數量</th></tr>
+    {% for l in lines %}
+    <tr><td>{{ l.code }}</td><td>{{ l.name }}</td><td><span class="tag {{ l.kind }}">{{ KIND_LABELS[l.kind] }}</span></td><td class="n">{{ l.issued_qty|fmt }} {{ l.unit }}</td>
+      <td class="n"><input type="number" step="any" name="returned_{{ l.material_id }}" value="{{ (l.issued_qty if l.kind == 'reusable' else 0)|fmt }}"></td></tr>
+    {% endfor %}
+  </table>
+  {% if can('office', 'warehouse', 'teacher') %}<p><button>結案歸還</button></p>{% endif %}
+  </form>
+{% else %}
+  <table>
+    <tr><th>料號</th><th>品名</th><th>類別</th><th class="n">計畫</th><th class="n">實發</th><th class="n">歸還</th><th class="n">實際耗用</th></tr>
+    {% for l in lines %}
+    <tr><td>{{ l.code }}</td><td>{{ l.name }}</td><td><span class="tag {{ l.kind }}">{{ KIND_LABELS[l.kind] }}</span></td>
+      <td class="n">{{ l.planned_qty|fmt }}</td><td class="n">{{ l.issued_qty|fmt }}</td><td class="n">{{ l.returned_qty|fmt }}</td>
+      <td class="n">{{ (l.issued_qty - l.returned_qty)|fmt }} {{ l.unit }}</td></tr>
+    {% endfor %}
+  </table>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}首頁{% endblock %}
+{% block content %}
+<h1>待辦總覽</h1>
+<div class="grid">
+  <div class="card">
+    <h2>7 天內課堂（未領料）<span class="tag">{{ d.upcoming|length }}</span></h2>
+    <table>
+      <tr><th>日期</th><th>班級 / 堂次</th><th>教室</th><th>領料單</th></tr>
+      {% for s in d.upcoming %}
+      <tr><td>{{ s.date }}</td><td>{{ s.class_name }} 第 {{ s.seq }} 堂</td><td>{{ s.classroom }}</td>
+        <td>{% if s.pick_id %}<a href="{{ url_for('main.pick_detail', pid=s.pick_id) }}">{{ PICK_STATUS[s.pick_status] }}</a>
+            {% else %}<span class="tag warn">未產生</span>{% endif %}</td></tr>
+      {% else %}<tr><td colspan="4" class="muted">無</td></tr>{% endfor %}
+    </table>
+    <p><a href="{{ url_for('main.picks') }}">前往領料 →</a></p>
+  </div>
+  <div class="card">
+    <h2>低於安全存量 <span class="tag {{ 'bad' if d.low_stock }}">{{ d.low_stock|length }}</span></h2>
+    <table>
+      <tr><th>物料</th><th class="n">現有</th><th class="n">安全存量</th></tr>
+      {% for r in d.low_stock %}
+      <tr><td>{{ r.material.code }} {{ r.material.name }}</td><td class="n bad">{{ r.on_hand|fmt }}</td><td class="n">{{ r.material.safety_stock|fmt }} {{ r.material.unit }}</td></tr>
+      {% else %}<tr><td colspan="3" class="muted">無</td></tr>{% endfor %}
+    </table>
+    <p><a href="{{ url_for('main.requirements') }}">查看需求分析 →</a></p>
+  </div>
+  <div class="card">
+    <h2>進行中加工單 <span class="tag">{{ d.open_process|length }}</span></h2>
+    <table>
+      <tr><th>#</th><th>品項</th><th class="n">數量</th><th>到期</th><th>狀態</th></tr>
+      {% for p in d.open_process %}
+      <tr><td>{{ p.id }}</td><td>{{ p.name }}</td><td class="n">{{ p.qty|fmt }} {{ p.unit }}</td><td>{{ p.due_date }}</td><td><span class="tag {{ p.status }}">{{ PROCESS_STATUS[p.status] }}</span></td></tr>
+      {% else %}<tr><td colspan="5" class="muted">無</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h2>教室器材需補 <span class="tag {{ 'bad' if d.equipment }}">{{ d.equipment|length }}</span></h2>
+    <table>
+      <tr><th>教室</th><th>器材</th><th class="n">標準</th><th class="n">良品</th><th class="n">需補</th></tr>
+      {% for e in d.equipment %}
+      <tr><td><a href="{{ url_for('main.classroom_detail', rid=e.classroom_id) }}">{{ e.classroom }}</a></td><td>{{ e.name }}</td><td class="n">{{ e.standard_qty|fmt }}</td><td class="n">{{ e.good|fmt }}</td><td class="n bad">{{ e.shortfall|fmt }}</td></tr>
+      {% else %}<tr><td colspan="5" class="muted">無</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h2>課後未歸還 <span class="tag {{ 'bad' if d.unreturned }}">{{ d.unreturned|length }}</span></h2>
+    <table>
+      <tr><th>日期</th><th>班級 / 堂次</th><th></th></tr>
+      {% for p in d.unreturned %}
+      <tr><td>{{ p.date }}</td><td>{{ p.class_name }} 第 {{ p.seq }} 堂</td><td><a href="{{ url_for('main.pick_detail', pid=p.id) }}">結案歸還</a></td></tr>
+      {% else %}<tr><td colspan="3" class="muted">無</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+{% endblock %}

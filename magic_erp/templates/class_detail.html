@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ cg.name }}{% endblock %}
+{% block content %}
+<h1>{{ cg.name }}　<span class="muted">{{ cg.course }} · {{ cg.classroom }}</span></h1>
+<form method="post">
+<div class="card">
+  <div class="form-row">
+    <label>學生數<input type="number" name="student_count" value="{{ cg.student_count }}" min="1" {{ 'disabled' if not can('office') }}></label>
+    <label>每組人數<input type="number" name="group_size" value="{{ cg.group_size }}" min="1" {{ 'disabled' if not can('office') }}></label>
+  </div>
+  <p class="hint">人數變更會自動反映在尚未發料的需求分析；已產生的待發料領料單可按「重新計算」。</p>
+  <table>
+    <tr><th>堂次</th><th>日期</th><th>狀態</th><th>領料單</th></tr>
+    {% for s in sessions %}
+    <tr><td>第 {{ s.seq }} 堂 {{ s.title }}</td>
+      <td>{% if s.status == 'planned' and can('office') %}<input type="date" name="date_{{ s.id }}" value="{{ s.date }}">{% else %}{{ s.date }}{% endif %}</td>
+      <td><span class="tag {{ s.status }}">{{ SESSION_STATUS[s.status] }}</span></td>
+      <td>{% if s.pick_id %}<a href="{{ url_for('main.pick_detail', pid=s.pick_id) }}">{{ PICK_STATUS[s.pick_status] }}</a>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+  {% if can('office') %}<p><button>儲存</button></p>{% endif %}
+</div>
+</form>
+{% endblock %}

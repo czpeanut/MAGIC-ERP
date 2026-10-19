@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · MAGIC-ERP</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% if g.user %}
+<header>
+  <div class="brand">MAGIC-ERP</div>
+  <nav>
+    {% set nav = [
+      ('main.dashboard', '首頁'), ('main.materials', '物料主檔'), ('main.courses', '課程用料'),
+      ('main.classes', '開班排課'), ('main.stock', '庫存'), ('main.stocktakes', '盤點'),
+      ('main.requirements', '需求分析'), ('main.process', '加工'), ('main.classrooms', '教室器材'),
+      ('main.picks', '領料')] %}
+    {% for ep, label in nav %}
+      <a href="{{ url_for(ep) }}" class="{{ 'active' if request.endpoint == ep }}">{{ label }}</a>
+    {% endfor %}
+    {% if g.user.role == 'admin' %}<a href="{{ url_for('main.users') }}">帳號</a>{% endif %}
+  </nav>
+  <div class="user">{{ g.user.display_name }}（{{ ROLE_LABELS[g.user.role] }}） <a href="{{ url_for('auth.logout') }}">登出</a></div>
+</header>
+{% endif %}
+<main>
+  {% for cat, msg in get_flashed_messages(with_categories=true) %}
+    <div class="flash {{ cat }}">{{ msg }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

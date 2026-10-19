@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}課程用料{% endblock %}
+{% block content %}
+<h1>課程用料（材料預算）</h1>
+{% if can('designer') %}
+<div class="card">
+  <h2>新增課程</h2>
+  <form method="post" class="form-row">
+    <label>課程代碼<input name="code" required size="8"></label>
+    <label>課程名稱<input name="name" required></label>
+    <label>堂數<input type="number" name="lessons" value="1" min="0"></label>
+    <label>說明<input name="description" size="40"></label>
+    <button>建立</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <table>
+    <tr><th>代碼</th><th>課程</th><th class="n">堂數</th><th>設計師</th><th>說明</th></tr>
+    {% for c in rows %}
+    <tr><td>{{ c.code }}</td><td><a href="{{ url_for('main.course_detail', cid=c.id) }}">{{ c.name }}</a></td>
+      <td class="n">{{ c.lesson_count }}</td><td>{{ c.designer or '' }}</td><td class="muted">{{ c.description }}</td></tr>
+    {% else %}<tr><td colspan="5" class="muted">尚無課程</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

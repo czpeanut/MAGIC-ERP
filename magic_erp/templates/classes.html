@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}開班排課{% endblock %}
+{% block content %}
+<h1>開班排課</h1>
+{% if can('office') %}
+<div class="card">
+  <h2>新增班級（自動依堂次排課）</h2>
+  <form method="post" class="form-row">
+    <label>班級名稱<input name="name" required></label>
+    <label>課程<select name="course_id">{% for c in courses %}<option value="{{ c.id }}">{{ c.code }} {{ c.name }}</option>{% endfor %}</select></label>
+    <label>教室<select name="classroom_id">{% for r in rooms %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}</select></label>
+    <label>授課人員<select name="teacher_id"><option value="">—</option>{% for t in teachers %}<option value="{{ t.id }}">{{ t.display_name }}</option>{% endfor %}</select></label>
+    <label>學生數<input type="number" name="student_count" required min="1"></label>
+    <label>每組人數<input type="number" name="group_size" value="4" min="1"></label>
+    <label>第一堂日期<input type="date" name="start_date" value="{{ today }}"></label>
+    <label>每堂間隔（天）<input type="number" name="interval_days" value="7" min="0"></label>
+    <button>建立</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <table>
+    <tr><th>班級</th><th>課程</th><th>教室</th><th>授課</th><th class="n">學生</th><th class="n">每組</th><th>下一堂</th></tr>
+    {% for r in rows %}
+    <tr><td><a href="{{ url_for('main.class_detail', gid=r.id) }}">{{ r.name }}</a></td><td>{{ r.course }}</td><td>{{ r.classroom }}</td><td>{{ r.teacher or '' }}</td>
+      <td class="n">{{ r.student_count }}</td><td class="n">{{ r.group_size }}</td><td>{{ r.next_date or '—' }}</td></tr>
+    {% else %}<tr><td colspan="7" class="muted">尚無班級</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

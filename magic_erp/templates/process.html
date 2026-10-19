@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}加工{% endblock %}
+{% block content %}
+<h1>加工單（產出清點）</h1>
+<p class="hint">流程：待加工 →（開始，扣原料）加工中 →（回報良品數）待確認 →（倉儲確認，良品入庫）已入庫。</p>
+{% if can('warehouse') %}
+<div class="card">
+  <form method="post" class="form-row">
+    <label>加工品<select name="material_id">{% for p in products %}<option value="{{ p.id }}" {{ 'selected' if prefill_mid == p.id }}>{{ p.code }} {{ p.name }}</option>{% endfor %}</select></label>
+    <label>數量<input type="number" step="any" name="qty" value="{{ prefill_qty }}" required></label>
+    <label>需完成日<input type="date" name="due_date"></label>
+    <label>備註<input name="note"></label>
+    <button>建立加工單</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <p class="no-print"><a href="?status=open">進行中</a> · <a href="?status=all">全部</a></p>
+  <table>
+    <tr><th>#</th><th>加工品</th><th>流程</th><th class="n">數量</th><th>耗用原料</th><th>需完成</th><th>狀態</th><th class="n">良品</th><th>操作</th></tr>
+    {% for r in rows %}
+    <tr><td>{{ r.id }}</td><td>{{ r.code }} {{ r.name }}</td><td class="muted">{{ r.process_steps }}</td>
+      <td class="n">{{ r.qty|fmt }} {{ r.unit }}</td><td>{{ r.source_name }} {{ (r.qty * r.source_ratio)|fmt }} {{ r.source_unit }}</td>
+      <td>{{ r.due_date }}</td><td><span class="tag {{ r.status }}">{{ PROCESS_STATUS[r.status] }}</span></td>
+      <td class="n">{{ r.good_qty|fmt }}</td>
+      <td>{% if can('warehouse') %}
+        {% if r.status == 'todo' %}<form class="inline" method="post" action="{{ url_for('main.process_action', oid=r.id, action='start') }}"><button class="small">開始加工</button></form>
+        {% elif r.status == 'doing' %}<form class="inline" method="post" action="{{ url_for('main.process_action', oid=r.id, action='finish') }}"><input type="number" step="any" name="good_qty" value="{{ r.qty|fmt }}"> <button class="small">回報完成</button></form>
+        {% elif r.status == 'review' %}<form class="inline" method="post" action="{{ url_for('main.process_action', oid=r.id, action='confirm') }}"><button class="small">確認入庫</button></form>
+        {% else %}<span class="muted">{{ r.confirmer or '' }} 確認</span>{% endif %}
+      {% endif %}</td></tr>
+    {% else %}<tr><td colspan="9" class="muted">無加工單</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

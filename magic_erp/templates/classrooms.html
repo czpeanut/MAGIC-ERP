@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}教室器材{% endblock %}
+{% block content %}
+<h1>教室共用器材</h1>
+{% if can('office') %}
+<div class="card">
+  <form method="post" class="form-row">
+    <label>教室名稱<input name="name" required></label>
+    <label>位置<input name="location"></label>
+    <button>新增教室</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <table>
+    <tr><th>教室</th><th>位置</th><th class="n">標準器材項目</th><th>最近盤點</th><th>需補項目</th></tr>
+    {% for r in rows %}{% set s = summary.get(r.id) %}
+    <tr><td><a href="{{ url_for('main.classroom_detail', rid=r.id) }}">{{ r.name }}</a></td><td>{{ r.location }}</td>
+      <td class="n">{{ s.items if s else 0 }}</td><td>{{ (s.last if s else none) or '尚未盤點' }}</td>
+      <td>{% if s and s.short %}<span class="tag bad">{{ s.short }} 項</span>{% else %}<span class="tag ok">正常</span>{% endif %}</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

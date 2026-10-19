@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}盤點{% endblock %}
+{% block content %}
+<h1>庫存盤點</h1>
+<p class="hint">建立盤點單時系統會記下當下帳面數量，輸入實盤數後過帳，差異自動產生「盤點調整」異動。</p>
+{% if can('warehouse') %}
+<div class="card">
+  <form method="post" class="form-row">
+    <label>盤點日期<input type="date" name="date" value="{{ today }}"></label>
+    <label>備註<input name="note" size="30"></label>
+    <button>建立盤點單</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <table>
+    <tr><th>#</th><th>日期</th><th>狀態</th><th class="n">已盤 / 品項</th><th>人員</th><th>備註</th></tr>
+    {% for r in rows %}
+    <tr><td><a href="{{ url_for('main.stocktake_detail', sid=r.id) }}">{{ r.id }}</a></td><td>{{ r.date }}</td>
+      <td><span class="tag {{ r.status }}">{{ '已過帳' if r.status == 'posted' else '盤點中' }}</span></td>
+      <td class="n">{{ r.counted }} / {{ r.total }}</td><td>{{ r.display_name or '' }}</td><td>{{ r.note }}</td></tr>
+    {% else %}<tr><td colspan="6" class="muted">尚無盤點單</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

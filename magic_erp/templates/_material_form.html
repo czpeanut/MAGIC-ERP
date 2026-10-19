@@ -1,0 +1,22 @@
+<div class="form-row">
+  <label>料號<input name="code" value="{{ m.code if m }}" required size="8"></label>
+  <label>品名<input name="name" value="{{ m.name if m }}" required></label>
+  <label>規格<input name="spec" value="{{ m.spec if m }}"></label>
+  <label>單位<input name="unit" value="{{ m.unit if m else '個' }}" size="4"></label>
+  <label>類別<select name="kind">
+    {% for k, v in KIND_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if m and m.kind == k }}>{{ v }}</option>{% endfor %}
+  </select></label>
+  <label>安全存量<input type="number" step="any" name="safety_stock" value="{{ m.safety_stock|fmt if m else 0 }}"></label>
+  <label>儲位<input name="location" value="{{ m.location if m }}" size="6"></label>
+</div>
+<p class="hint">需加工品：選擇原料並填入「每 1 單位成品耗用原料數」（例如 1 片大板裁 8 片小板 → 0.125）。</p>
+<div class="form-row">
+  <label>加工原料<select name="source_material_id">
+    <option value="">（不需加工）</option>
+    {% for o in all_materials %}<option value="{{ o.id }}" {{ 'selected' if m and m.source_material_id == o.id }}>{{ o.code }} {{ o.name }}</option>{% endfor %}
+  </select></label>
+  <label>原料耗用比<input type="number" step="any" name="source_ratio" value="{{ m.source_ratio|fmt if m else 1 }}"></label>
+  <label>加工流程<input name="process_steps" value="{{ m.process_steps if m }}" size="30"></label>
+  <label>備註<input name="note" value="{{ m.note if m }}"></label>
+  {% if m %}<label>狀態<select name="active"><option value="1">使用中</option><option value="0" {{ 'selected' if not m.active }}>停用</option></select></label>{% endif %}
+</div>

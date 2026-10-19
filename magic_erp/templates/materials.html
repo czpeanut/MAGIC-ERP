@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}物料主檔{% endblock %}
+{% block content %}
+<h1>物料主檔</h1>
+<p class="hint">所有表單共用同一份品名 / 規格，只在這裡維護一次。類別：耗材＝上課消耗；非耗材＝領出上課、課後歸還；共用器材＝常駐教室的教具。</p>
+{% if can('designer', 'warehouse') %}
+<div class="card">
+  <h2>新增物料</h2>
+  <form method="post">{% set m = none %}{% include '_material_form.html' %}<p><button>新增</button></p></form>
+  <hr>
+  <form method="post" action="{{ url_for('main.materials_import') }}" enctype="multipart/form-data" class="form-row">
+    <label>從 Excel 轉存的 CSV 匯入（欄位：料號,品名,規格,單位,類別,安全存量,期初庫存）<input type="file" name="file" accept=".csv"></label>
+    <button class="secondary">匯入</button>
+  </form>
+</div>
+{% endif %}
+<div class="card">
+  <form class="form-row no-print">
+    <label>搜尋<input name="q" value="{{ q }}"></label>
+    <label>類別<select name="kind"><option value="">全部</option>
+      {% for k, v in KIND_LABELS.items() %}<option value="{{ k }}" {{ 'selected' if kind == k }}>{{ v }}</option>{% endfor %}</select></label>
+    <button class="secondary">篩選</button>
+  </form>
+  <table>
+    <tr><th>料號</th><th>品名</th><th>規格</th><th>類別</th><th>加工來源</th><th>儲位</th><th class="n">庫存</th><th class="n">安全存量</th><th></th></tr>
+    {% for r in rows %}
+    <tr class="{{ 'muted' if not r.active }}">
+      <td>{{ r.code }}</td><td>{{ r.name }}</td><td>{{ r.spec }}</td>
+      <td><span class="tag {{ r.kind }}">{{ KIND_LABELS[r.kind] }}</span></td>
+      <td>{% if r.source_name %}{{ r.source_name }} ×{{ r.source_ratio|fmt }}{% endif %}</td>
+      <td>{{ r.location }}</td>
+      <td class="n {{ 'bad' if on_hand[r.id] < r.safety_stock }}">{{ on_hand[r.id]|fmt }} {{ r.unit }}</td>
+      <td class="n">{{ r.safety_stock|fmt }}</td>
+      <td><a href="{{ url_for('main.material_edit', mid=r.id) }}">詳細</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

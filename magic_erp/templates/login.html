@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}登入{% endblock %}
+{% block content %}
+<div class="card login">
+  <h1>MAGIC-ERP 登入</h1>
+  <form method="post">
+    <input name="username" placeholder="帳號" autofocus required>
+    <input name="password" type="password" placeholder="密碼" required>
+    <button>登入</button>
+  </form>
+</div>
+{% endblock %}

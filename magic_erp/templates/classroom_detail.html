@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}{{ room.name }}{% endblock %}
+{% block content %}
+<h1>{{ room.name }}　<span class="muted">{{ room.location }}</span></h1>
+<div class="card">
+  <h2>器材狀態（依最近一次盤點）</h2>
+  <table>
+    <tr><th>料號</th><th>器材</th><th class="n">標準數量</th><th class="n">良品</th><th class="n">損壞</th><th class="n">遺失</th><th>備註</th><th class="n">需補</th><th class="n">倉庫備品</th><th></th></tr>
+    {% for e in status %}
+    <tr><td>{{ e.code }}</td><td>{{ e.name }} <span class="muted">{{ e.spec }}</span></td><td class="n">{{ e.standard_qty|fmt }}</td>
+      <td class="n">{{ e.good|fmt }}</td><td class="n">{{ e.damaged|fmt }}</td><td class="n">{{ e.missing|fmt }}</td><td>{{ e.line_note }}</td>
+      <td class="n {{ 'bad' if e.shortfall and not e.replenished }}">{{ e.shortfall|fmt }}</td><td class="n">{{ on_hand[e.material_id]|fmt }}</td>
+      <td>{% if e.replenished %}<span class="tag ok">已撥補</span>
+          {% elif e.shortfall and can('warehouse') %}<form class="inline" method="post" action="{{ url_for('main.equipment_replenish', line_id=e.line_id) }}"><button class="small">從倉庫撥補</button></form>
+          {% elif e.shortfall %}<span class="tag bad">待更新</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="10" class="muted">尚未設定標準器材</td></tr>{% endfor %}
+  </table>
+</div>
+
+{% if can('teacher') and status %}
+<div class="card">
+  <h2>現場盤點（授課人員）</h2>
+  <form method="post" action="{{ url_for('main.classroom_check', rid=room.id) }}">
+    <div class="form-row"><label>盤點日期<input type="date" name="date" value="{{ today }}"></label><label>備註<input name="note" size="40"></label></div>
+    <table>
+      <tr><th>器材</th><th class="n">標準</th><th class="n">良品</th><th class="n">損壞</th><th class="n">遺失</th><th>說明</th></tr>
+      {% for e in status %}
+      <tr><td>{{ e.name }}</td><td class="n">{{ e.standard_qty|fmt }}</td>
+        <td class="n"><input type="number" step="any" name="good_{{ e.material_id }}" value="{{ (e.good if e.good is not none else e.standard_qty)|fmt }}"></td>
+        <td class="n"><input type="number" step="any" name="damaged_{{ e.material_id }}" value="0"></td>
+        <td class="n"><input type="number" step="any" name="missing_{{ e.material_id }}" value="0"></td>
+        <td><input name="note_{{ e.material_id }}"></td></tr>
+      {% endfor %}
+    </table>
+    <p><button>送出盤點</button></p>
+  </form>
+</div>
+{% endif %}
+
+{% if can('teacher', 'warehouse', 'office') %}
+<div class="card">
+  <h2>設定標準配置</h2>
+  <form method="post" action="{{ url_for('main.classroom_standard', rid=room.id) }}" class="form-row">
+    <label>共用器材<select name="material_id">{% for m in shared %}<option value="{{ m.id }}">{{ m.code }} {{ m.name }} {{ m.spec }}</option>{% endfor %}</select></label>
+    <label>標準數量（0＝移除）<input type="number" step="any" name="standard_qty" required></label>
+    <button class="secondary">儲存</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>盤點紀錄</h2>
+  <table><tr><th>#</th><th>日期</th><th>人員</th><th>備註</th></tr>
+  {% for c in checks %}<tr><td>{{ c.id }}</td><td>{{ c.date }}</td><td>{{ c.display_name or '' }}</td><td>{{ c.note }}</td></tr>
+  {% else %}<tr><td colspan="4" class="muted">無</td></tr>{% endfor %}</table>
+</div>
+{% endblock %}
